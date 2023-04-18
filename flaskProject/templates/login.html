@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="../static/javaex/pc/css/bootstrap.min.css">
+
+<!-- Custom Styles -->
+<link rel="stylesheet" type="text/css" href="../static/javaex/pc/css/styles.css">
+<script>
+		function mySubmit(form){
+			let formData = new FormData(form);
+			let email = formData.get('email');
+			let pwd = formData.get('password');
+            _url = location.href;
+            _url+="/index";
+            return _url
+
+		}
+</script>
+<!-- Page title -->
+<title>Login</title>
+</head>
+<body>
+
+<!-- page background -->
+<div id="login-bg" class="container-fluid">
+  <div class="bg-color"></div>
+</div>
+
+<!-- login div -->
+<div class="container" id="login">
+    <!-- center aligned -->
+	<div class="row justify-content-center">
+    <!-- cast the size -->
+	<div class="col-lg-8">
+	  <div class="login">
+        <!-- box title -->
+		<h1>Login</h1>
+            <!-- log in form, bind with the login method-->
+            <form action="/" method="post">
+            <!-- email and password field-->
+            <div class="form-group">{{ msg }}
+              <input name="email" type="text" class="form-control" id="eml" aria-describedby="emailHelp" placeholder="Enter EEID">
+
+            </div>
+            <div class="form-group">
+              <input name="password" type="password" class="form-control" id="pwd" placeholder="Enter password">
+            </div>
+
+            <div class="form-check">
+              <!-- define slider to switch whether to remember the user session -->
+              <label class="switch">
+              <input type="checkbox">
+              <span class="slider round"></span>
+              </label>
+              <!-- remember me slider-->
+              <label class="form-check-label" for="exampleCheck1">Remember Me</label>
+              <!-- forgot password label, could be clicked-->
+              <label class="forgot-password"><a href="#">Forgot Password?</a></label>
+
+            </div>
+			  
+            <br>
+            <!-- submit button -->
+            <button type="submit" class="btn btn-lg btn-block ">Sign In</button>
+          </form>
+
+    </div>
+	</div>
+	</div>
+</div>
+
+</body>
+</html>

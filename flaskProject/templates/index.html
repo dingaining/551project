@@ -11,7 +11,7 @@
 <body>
 <div class="list-content">
 	<div class="block">
-		<h2>Employees</h2>
+        <h2>Employees<button class="button" style="margin-left: 81vw" onclick="window.location.href='/'">Log Out</button></h2>
 		<div class="main">
 			<div class="admin-search">
 
@@ -38,7 +38,7 @@
 
 			<div class="operation-wrap">
 				<div class="buttons-wrap">
-					<button class="button blue radius-3"><span class="icon-plus"></span> Get All(Clear Filters)</button>
+					<button class="button blue radius-3" onclick="window.location.href='/index'"><span class="icon-plus"></span> Get All (Clear Filters)</button>
                     <button class="button blue radius-3" onclick="puta();">Insert</button>
                     <form id="put" name='put' action="/index/put" method="post" style="visibility: hidden; display: none">
                         EEID: <input type="text" name="EEID" id="EEID">
