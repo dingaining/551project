@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pymongo
 import json
 import uuid
@@ -12,6 +12,32 @@ collection = db_test.emp
 app = Flask(__name__)
 # Create the SocketIO object after creating the Flask app
 socketio = SocketIO(app, cors_allowed_origins="*")
+@app.route('/')
+def login_page():  # All Results, index page
+    return render_template("login.html")
+
+@app.route('/', methods=["GET","POST"])
+def login():  # All Results, index page
+    if request.method == 'GET':
+        return render_template("login.html")
+    eeid = request.form.get('email')
+    pwd = request.form.get('password')
+    a = collection.find({}, {"_id": 0})
+    emp = []
+    verify = False
+    admin = False
+    for i in a:
+        emp.append(i)
+        if i['EEID'] == eeid and pwd == 'password':
+            verify = True
+            if eeid == 'E02387':
+                admin = True
+    if verify:
+        if admin:
+            return render_template("admin_page.html", data = emp)
+        return render_template("page.html", data = emp)
+    else:
+        return render_template("login.html", msg = 'The EEID or password you entered may be incorrect!')
 
 # GET and filtering function: orderBy=”$key”/”$value”/”name”, limitToFirst/Last, equalTo, startAt/endAt for the whole data
 
@@ -100,16 +126,18 @@ def handle_get_employees(data):
     startAt = data.get('startAt')
     endAt = data.get('endAt')
 
-    emp = ws_get_employees(orderBy, limitToFirst, limitToLast, equalTo, startAt, endAt)
-    emit('employees_received', emp, broadcast=True)
+    result = ws_get_employees(orderBy, limitToFirst, limitToLast, equalTo, startAt, endAt)
+    if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
+        emit('employees_received', result[0], broadcast=True)
+    emit('employees_received', result, broadcast=True)
 
 # PUT for adding new employee or overwriting employee's information by its EEID
-def ws_put_employee(eeid, dict):
+def ws_put_employee(eeid, dicts):
     try:
         # To adjust the order of keys
         data = {}
         data['EEID'] = eeid
-        data.update(dict)
+        data.update(dicts)
         # check if employee with eeid already exists
         if collection.count_documents({'EEID': eeid}) > 0:
             # overwrite existing employee with new data
@@ -135,8 +163,8 @@ def put_employee(eeid):
     if not data:
         data = request.form.to_dict()
         for key, value in data.items():
-            dict = json.loads(key)
-    result = ws_put_employee(eeid, dict)
+            dicts = json.loads(key)
+    result = ws_put_employee(eeid, dicts)
     if 'error' in result:
         return jsonify(result), 400
     return jsonify(result)
@@ -144,22 +172,22 @@ def put_employee(eeid):
 # WebSocket event handler for adding or overwriting employees
 @socketio.on('put_employee')
 def handle_put_employee(data):
-    eeid = data.get('eeid')
+    eeid = data.get('EEID')
     # employee_data needs to be a dictionary
-    dict = data.get('employee_data')
-
-    result = ws_put_employee(eeid, dict)
-    emit('employee_put', result, broadcast=True)
-
+    dicts = data
+    result = ws_put_employee(eeid, dicts)
+    emit('employees_put', result, broadcast=True)
+    emit('get_employees', {}, broadcast=True)
 
 # POST: Create a new employee without specifying EEID (server generates EEID automatically).
-def ws_post_employee(dict):
+def ws_post_employee(dicts):
     try:
         # Generate a unique EEID using the uuid library
         eeid = f'E{str(uuid.uuid4())[:6].upper()}'
         data = {}
         data['EEID'] = eeid
-        data.update(dict)
+        data.update(dicts)
+        data['EEID'] = eeid
         collection.insert_one(data)
         return {"message": f"New employee {eeid} added successfully."}
     except Exception as e:
@@ -172,9 +200,9 @@ def post_employee():
     if not data:
         data = request.form.to_dict()
         for key, value in data.items():
-            dict = json.loads(key)
+            dicts = json.loads(key)
 
-    result = ws_post_employee(dict)
+    result = ws_post_employee(dicts)
     if 'error' in result:
         return jsonify(result), 400
     return jsonify(result)
@@ -182,9 +210,9 @@ def post_employee():
 # WebSocket event handler for posting new employees
 @socketio.on('post_employee')
 def handle_post_employee(data):
-    result = post_employee(data)
-    emit('employee_created', result, broadcast=True)
-
+    result = ws_post_employee(data)
+    emit('employees_posted', result, broadcast=True)
+    emit('get_employees', {}, broadcast=True)
 
 # PATCH: Update specific fields of an existing employee by their EEID.
 def ws_patch_employee(eeid, data):
@@ -207,8 +235,8 @@ def patch_employee(eeid):
     if not data:
         data = request.form.to_dict()
         for key, value in data.items():
-            dict = json.loads(key)
-        data = dict
+            dicts = json.loads(key)
+        data = dicts
     result = ws_patch_employee(eeid, data)
     if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
         return jsonify(result[0]), result[1]
@@ -221,14 +249,18 @@ def handle_patch_employee(data):
     # employee_data needs to be a dictionary
     data = data.get('employee_data')
 
-    result = ws_put_employee(eeid, data)
-    emit('employee_patched', result, broadcast=True)
+    result = ws_patch_employee(eeid, data)
+    emit('employee_updated', result, broadcast=True)
+    emit('get_employees', {}, broadcast=True)
 
 # DELETE: Remove an existing employee by their EEID.
 def ws_delete_employee(eeid):
     try:
+        print(eeid)
+        print(type(eeid))
         # Check if employee with eeid exists
         result = collection.delete_one({'EEID': eeid})
+
         count = result.deleted_count
         if count > 0:
             return {"message": f"Employee {eeid} deleted successfully, {count} record of employee deleted"}
@@ -250,6 +282,7 @@ def delete_employee(eeid):
 def handle_delete_employee(eeid):
     result = ws_delete_employee(eeid)
     emit('employee_deleted', result, broadcast=True)
+    emit('get_employees', {}, broadcast=True)
 
 # WebSocket basic event handlers
 @socketio.on('connect')

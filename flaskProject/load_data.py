@@ -6,7 +6,6 @@ db_test = client.project
 collection = db_test.emp
 
 # load the initial data from Employee.json
-# TODO: clean the data
 def load_initial_data():
     try:
         with open("sampleData/Employee.json", 'r') as f:

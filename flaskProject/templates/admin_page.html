@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+	<link href="../static/javaex/pc/css/common.css" rel="stylesheet" />
+	<link href="../static/javaex/pc/css/skin/tina.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f1f2f3;
+            color: #333;
+        }
+        .title {
+            background-color: #3a9bd9;
+            color: #fff;
+            padding: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: Microsoft Jhenghei, Helvetica, Arial, Heiti TC, PingFang TC, sans-serif;
+        }
+        .basic-grey {
+            margin-left: auto;
+            margin-right: 0;
+            max-width: 500px;
+            background: #F7F7F7;
+            padding: 25px 15px 25px 10px;
+            font: 12px microsoft yahei,Helvetica,Microsoft Jhenghei,Heiti TC,PingFang TC,sans-serif;
+            color: #888;
+            text-shadow: 1px 1px 1px #FFF;
+            border:1px solid #E4E4E4;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .basic-grey.left label{
+            width: 45%;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        .basic-grey label {
+            width: 45%;
+            margin-right: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="title">Employee Management System</div>
+    <div class="list-content">
+	<div class="block">
+		<div class="main">
+			<div class="admin-search">
+                <button id="deleteBtn" class="button grey" style="margin-left: 0;float: left; display: inline-block;">Delete Employee</button>
+                <form id="deleteForm" class="basic-grey left" style="display:none; margin-left: 0;  width: 350px ">
+                    <br><label for="EEID">EEID:</label>
+                    <input type="text" id="delete_EEID" name="EEID">
+                    <button type="submit">Submit</button>
+                </form>
+                <button id="putORpostBtn" class="button green" style="margin-left: 10px;float: left; display: inline-block;">Add or Overwrite Employee</button>
+                <form id="putORpostForm" class="basic-grey left" style="display:none; margin-left: 0; width: 350px ">
+                    <label for="EEID">EEID:(Optional)</label>
+                    <input type="text" id="EEID" name="EEID">
+                    <label for="FullName">Full Name:</label>
+                    <input type="text" id="FullName" name="FullName">
+                    <label for="JobTitle">Job Title:</label>
+                    <input type="text" id="JobTitle" name="JobTitle">
+                    <label for="Department">Department:</label>
+                    <input type="text" id="Department" name="Department">
+                    <label for="BusinessUnit">Business Unit:</label>
+                    <input type="text" id="BusinessUnit" name="BusinessUnit">
+                    <label for="Gender">Gender:</label>
+                    <input type="text" id="Gender" name="Gender">
+                    <label for="Age">Age:</label>
+                    <input type="number" id="Age" name="Age">
+                    <label for="HireDate">Hire Date:</label>
+                    <input type="date" id="HireDate" name="HireDate">
+                    <label for="AnnualSalary">Annual Salary:</label>
+                    <input type="number" id="AnnualSalary" name="AnnualSalary">
+                    <label for="Bonus">Bonus %:</label>
+                    <input type="number" id="Bonus" name="Bonus">
+                    <label for="Country">Country:</label>
+                    <input type="text" id="Country" name="Country">
+                    <label for="ExitDate">Exit Date:</label>
+                    <input type="date" id="ExitDate" name="ExitDate">
+                    <button type="submit">Submit</button>
+                </form>
+
+                <button id="patchBtn" class="button lightred" style="display: inline-block;">Update Employee</button>
+                <form id="patchForm" class="basic-grey" style="display:none">
+                    <label for="EEID">EEID:</label>
+                    <input type="text" id="patch_EEID" name="EEID">
+                    <label for="FullName">Full Name:</label>
+                    <input type="text" id="patch_FullName" name="FullName"><br>
+                    <label for="JobTitle">Job Title:</label>
+                    <input type="text" id="patch_JobTitle" name="JobTitle">
+                    <label for="Department">Department:</label>
+                    <input type="text" id="patch_Department" name="Department"><br>
+                    <label for="BusinessUnit">Business Unit:</label>
+                    <input type="text" id="patch_BusinessUnit" name="BusinessUnit">
+                    <label for="Gender">Gender:</label>
+                    <input type="text" id="patch_Gender" name="Gender"><br>
+                    <label for="Age">Age:</label>
+                    <input type="number" id="patch_Age" name="Age">
+                    <label for="HireDate">Hire Date:</label>
+                    <input type="date" id="patch_HireDate" name="HireDate"><br>
+                    <label for="AnnualSalary">Annual Salary:</label>
+                    <input type="number" id="patch_AnnualSalary" name="AnnualSalary">
+                    <label for="Bonus">Bonus %:</label>
+                    <input type="number" id="patch_Bonus" name="Bonus"><br>
+                    <label for="Country">Country:</label>
+                    <input type="text" id="patch_Country" name="Country">
+                    <label for="ExitDate">Exit Date:</label>
+                    <input type="date" id="patch_ExitDate" name="ExitDate">
+                    <button type="submit" form="patchForm">Submit</button>
+                </form>
+
+                <button id="filterBtn" class="button indigo" style="display: inline-block;">Filter</button>
+                <form id="filterForm" class="basic-grey" style="display:none">
+                    <label for="orderBy">Order By: </label>
+                    <input type="text" id="orderBy" name="orderBy">
+                    <label for="limitToFirst">Limit To First: </label>
+                    <input type="number" id="limitToFirst" name="limitToFirst" value="0"><br>
+                    <label for="limitToLast">Limit To Last: </label>
+                    <input type="number" id="limitToLast" name="limitToLast" value="0">
+                    <label for="equalTo">Equal To: </label>
+                    <input type="text" id="equalTo" name="equalTo"><br>
+                    <label for="startAt">Start At: </label>
+                    <input type="text" id="startAt" name="startAt">
+                    <label for="endAt">End At: </label>
+                    <input type="text" id="endAt" name="endAt">
+                    <button type="submit">Submit</button>
+                </form>
+
+                <table id="employeeTable" class="table color2">
+                <thead>
+                    <tr>
+                        <th>EEID</th>
+                        <th>Full Name</th>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Business Unit</th>
+                        <th>Gender</th>
+                        <th>Age</th>
+                        <th>Hire Date</th>
+                        <th>Annual Salary</th>
+                        <th>Bonus %</th>
+                        <th>Country</th>
+                        <th>Exit Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+    <!-- Include Socket.IO library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:5000');
+
+        // Show data on the page by default
+        const tableBody = document.getElementById('tableBody');
+
+        function updateEmployeeTable(employees) {
+            let rows = '';
+
+            employees.forEach(employee => {
+                rows += `<tr>
+                            <td>${employee.EEID}</td>
+                            <td>${employee['Full Name']}</td>
+                            <td>${employee['Job Title']}</td>
+                            <td>${employee.Department}</td>
+                            <td>${employee['Business Unit']}</td>
+                            <td>${employee.Gender}</td>
+                            <td>${employee.Age}</td>
+                            <td>${employee['Hire Date']}</td>
+                            <td>${employee['Annual Salary']}</td>
+                            <td>${employee['Bonus %']}</td>
+                            <td>${employee.Country}</td>
+                            <td>${employee['Exit Date']}</td>
+                        </tr>`;
+            });
+
+            tableBody.innerHTML = rows;
+        }
+
+        // Show data on the page by filter
+        const filterBtn = document.getElementById('filterBtn');
+        const filterForm = document.getElementById('filterForm');
+
+        // Show the filter form when the filter button is clicked
+        filterBtn.addEventListener('click', () => {
+            filterForm.style.display = filterForm.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Handle form submission
+        filterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Get form values
+            const orderBy = document.getElementById('orderBy').value;
+            const limitToFirst = document.getElementById('limitToFirst').value;
+            const limitToLast = document.getElementById('limitToLast').value;
+            const equalTo = document.getElementById('equalTo').value;
+            const startAt = document.getElementById('startAt').value;
+            const endAt = document.getElementById('endAt').value;
+
+            // Create filter object
+            const filterData = {
+            orderBy,
+            limitToFirst,
+            limitToLast,
+            equalTo,
+            startAt,
+            endAt,
+            };
+
+            // Emit 'get_employees' event with filterData
+            socket.emit('get_employees', filterData);
+        });
+
+        // Add or overwrite data by put and post
+        const putORpostBtn = document.getElementById('putORpostBtn');
+        const putORpostForm = document.getElementById('putORpostForm');
+
+        putORpostBtn.addEventListener('click', () => {
+            putORpostForm.style.display = putORpostForm.style.display === 'none' ? 'block' : 'none';
+        });
+        putORpostForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Get form values
+            const EEID = document.getElementById('EEID').value;
+            const FullName = document.getElementById('FullName').value;
+            const JobTitle = document.getElementById('JobTitle').value;
+            const Department = document.getElementById('Department').value;
+            const BusinessUnit = document.getElementById('BusinessUnit').value;
+            const Gender = document.getElementById('Gender').value;
+            const Age = document.getElementById('Age').value;
+            const HireDate = document.getElementById('HireDate').value;
+            const AnnualSalary = document.getElementById('AnnualSalary').value;
+            const Bonus = document.getElementById('Bonus').value;
+            const Country = document.getElementById('Country').value;
+            const ExitDate = document.getElementById('ExitDate').value;
+
+            // Create employee object
+            const employeeData = {
+                EEID: EEID,
+                'Full Name': FullName,
+                'Job Title': JobTitle,
+                Department: Department,
+                'Business Unit': BusinessUnit,
+                Gender: Gender,
+                Age: Age,
+                'Hire Date': HireDate,
+                'Annual Salary': AnnualSalary,
+                'Bonus %': Bonus,
+                Country: Country,
+                'Exit Date': ExitDate,
+            };
+            // Call the appropriate handle function based on the presence of data in the EEID field
+            if (EEID) {
+                socket.emit('put_employee', employeeData);
+            } else {
+                socket.emit('post_employee', employeeData);
+            }
+        })
+
+        // update employee by patch
+        const patchBtn = document.getElementById('patchBtn');
+        const patchForm = document.getElementById('patchForm');
+        patchBtn.addEventListener('click', () => {
+            patchForm.style.display = patchForm.style.display === 'none' ? 'block' : 'none';
+        });
+        patchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Get form values
+            const EEID = document.getElementById('patch_EEID').value;
+            const formValues = {
+                'Full Name': document.getElementById('patch_FullName').value,
+                'Job Title': document.getElementById('patch_JobTitle').value,
+                Department: document.getElementById('patch_Department').value,
+                'Business Unit': document.getElementById('patch_BusinessUnit').value,
+                Gender: document.getElementById('patch_Gender').value,
+                Age: document.getElementById('patch_Age').value,
+                'Hire Date': document.getElementById('patch_HireDate').value,
+                'Annual Salary': document.getElementById('patch_AnnualSalary').value,
+                'Bonus %': document.getElementById('patch_Bonus').value,
+                Country: document.getElementById('patch_Country').value,
+                'Exit Date': document.getElementById('patch_ExitDate').value,
+            };
+
+            // Create employee object
+            const employeeData = {};
+            for (const key in formValues) {
+                if (formValues[key] !== null && formValues[key] !== '') {
+                    employeeData[key] = formValues[key];
+                }
+            }
+
+            // Call handle function based on the presence of data in the EEID field
+            if (EEID) {
+                socket.emit('patch_employee', { eeid: EEID, employee_data: employeeData });
+            } else {
+                // report error
+
+            }
+        });
+
+        // delete employee by delete
+        const deleteBtn = document.getElementById('deleteBtn');
+        const deleteForm = document.getElementById('deleteForm');
+        deleteBtn.addEventListener('click', () => {
+            deleteForm.style.display = deleteForm.style.display === 'none' ? 'block' : 'none';
+        });
+        deleteForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Get form values
+            const EEID = document.getElementById('delete_EEID').value;
+            // Call handle function based on the EEID field
+            if (EEID) {
+                socket.emit('delete_employee', EEID);
+            } else {
+                // report error
+
+            }
+        });
+
+        socket.on('employees_received', data => {
+            updateEmployeeTable(data);
+        });
+
+        socket.on('connect', () => {
+            socket.emit('get_employees', {});
+        });
+    </script>
+</body>
+</html>
