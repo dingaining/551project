@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+	<link href="static/javaex/pc/css/common.css" rel="stylesheet" />
+	<link href="static/javaex/pc/css/skin/tina.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f1f2f3;
+            color: #333;
+        }
+        .title {
+            background-color: #3a9bd9;
+            color: #fff;
+            padding: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: Microsoft Jhenghei, Helvetica, Arial, Heiti TC, PingFang TC, sans-serif;
+        }
+        .basic-grey {
+            margin-left: auto;
+            margin-right: 0;
+            max-width: 500px;
+            background: #F7F7F7;
+            padding: 25px 15px 25px 10px;
+            font: 12px microsoft yahei,Helvetica,Microsoft Jhenghei,Heiti TC,PingFang TC,sans-serif;
+            color: #888;
+            text-shadow: 1px 1px 1px #FFF;
+            border:1px solid #E4E4E4;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .basic-grey label {
+          width: 45%;
+        }
+        .basic-grey label:nth-child(2n+1) {
+          clear: left;
+          margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">Employee Management System</div>
+    <div class="list-content">
+	<div class="block">
+		<div class="main">
+			<div class="admin-search">
+                <button id="filterBtn" class="button indigo">Filter</button>
+                <form id="filterForm" class="basic-grey" style="display:none">
+                    <label for="orderBy">Order By: </label>
+                    <input type="text" id="orderBy" name="orderBy">
+                    <label for="limitToFirst">Limit To First: </label>
+                    <input type="number" id="limitToFirst" name="limitToFirst" value="0">
+                    <label for="limitToLast">Limit To Last: </label>
+                    <input type="number" id="limitToLast" name="limitToLast" value="0">
+                    <label for="equalTo">Equal To: </label>
+                    <input type="text" id="equalTo" name="equalTo">
+                    <label for="startAt">Start At: </label>
+                    <input type="text" id="startAt" name="startAt">
+                    <label for="endAt">End At: </label>
+                    <input type="text" id="endAt" name="endAt">
+                    <button type="submit">Submit</button>
+                </form>
+                <table id="employeeTable" class="table color2">
+                <thead>
+                    <tr>
+                        <th>EEID</th>
+                        <th>Full Name</th>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Business Unit</th>
+                        <th>Gender</th>
+                        <th>Age</th>
+                        <th>Hire Date</th>
+                        <th>Annual Salary</th>
+                        <th>Bonus %</th>
+                        <th>Country</th>
+                        <th>Exit Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+    <!-- Include Socket.IO library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:5000');
+
+        // show data on the page by default
+        const tableBody = document.getElementById('tableBody');
+
+        function updateEmployeeTable(employees) {
+            let rows = '';
+
+            employees.forEach(employee => {
+                rows += `<tr>
+                            <td>${employee.EEID}</td>
+                            <td>${employee['Full Name']}</td>
+                            <td>${employee['Job Title']}</td>
+                            <td>${employee.Department}</td>
+                            <td>${employee['Business Unit']}</td>
+                            <td>${employee.Gender}</td>
+                            <td>${employee.Age}</td>
+                            <td>${employee['Hire Date']}</td>
+                            <td>${employee['Annual Salary']}</td>
+                            <td>${employee['Bonus %']}</td>
+                            <td>${employee.Country}</td>
+                            <td>${employee['Exit Date']}</td>
+                        </tr>`;
+            });
+
+            tableBody.innerHTML = rows;
+        }
+
+        // show data on the page by filter
+        const filterBtn = document.getElementById('filterBtn');
+        const filterForm = document.getElementById('filterForm');
+
+        // Show the filter form when the filter button is clicked
+        filterBtn.addEventListener('click', () => {
+          filterForm.style.display = filterForm.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Handle form submission
+        filterForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+
+          // Get form values
+          const orderBy = document.getElementById('orderBy').value;
+          const limitToFirst = document.getElementById('limitToFirst').value;
+          const limitToLast = document.getElementById('limitToLast').value;
+          const equalTo = document.getElementById('equalTo').value;
+          const startAt = document.getElementById('startAt').value;
+          const endAt = document.getElementById('endAt').value;
+
+          // Create filter object
+          const filterData = {
+            orderBy,
+            limitToFirst,
+            limitToLast,
+            equalTo,
+            startAt,
+            endAt,
+          };
+
+          // Emit 'get_employees' event with filterData
+          socket.emit('get_employees', filterData);
+        });
+
+
+        socket.on('employees_received', data => {
+            updateEmployeeTable(data);
+        });
+
+        socket.on('connect', () => {
+            socket.emit('get_employees', {});
+        });
+    </script>
+</body>
+</html>
