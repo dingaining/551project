@@ -19,15 +19,8 @@ def ws_get_employees(orderBy=None, limitToFirst=0, limitToLast=0, equalTo=None, 
     # check if orderBy is not defined while other query parameters are present
     if not orderBy and (limitToFirst or limitToLast or equalTo or startAt or endAt):
         return {"error": "orderBy must be defined when other query parameters are defined"}
-
     if orderBy:
         orderBy = orderBy.replace('"', '')
-        # Age is store as number rather than string in MongoDB
-        if orderBy == 'Age':
-            if startAt:
-                startAt = int(startAt)
-            if endAt:
-                endAt = int(endAt)
         # initialize the query
         query = []
 
@@ -35,13 +28,19 @@ def ws_get_employees(orderBy=None, limitToFirst=0, limitToLast=0, equalTo=None, 
         match_query = {}
         if equalTo:
             equalTo = equalTo.replace('"', '')
+            if orderBy == 'Age':
+                equalTo = int(equalTo)
             match_query[orderBy] = equalTo
         else:
             if startAt:
                 startAt = startAt.replace('"', '')
+                if orderBy == 'Age':
+                    startAt = int(startAt)
                 match_query[orderBy] = {"$gte": startAt}
             if endAt:
                 endAt = endAt.replace('"', '')
+                if orderBy == 'Age':
+                    endAt = int(endAt)
                 if orderBy in match_query:
                     match_query[orderBy].update({"$lte": endAt})
                 else:
@@ -103,7 +102,6 @@ def handle_get_employees(data):
 
     emp = ws_get_employees(orderBy, limitToFirst, limitToLast, equalTo, startAt, endAt)
     emit('employees_received', emp, broadcast=True)
-
 
 # PUT for adding new employee or overwriting employee's information by its EEID
 def ws_put_employee(eeid, dict):

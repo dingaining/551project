@@ -248,7 +248,7 @@ input[type="radio"].fill:checked[disabled] ~ .fill-css, input[type="checkbox"].f
 /*表格*/
 .table, .tableTime{border-collapse:collapse;border-spacing:0;width:100%;text-align:left;}
 .table th, .tableTime th{line-height: 20px;font-size: 14px;vertical-align: middle;}
-.table td,.tableTime td{line-height:20px;font-size: 14px;word-wrap: break-word; word-break:break-all;vertical-align: middle;}
+.table td,.tableTime td{line-height:20px;font-size: 13px;word-wrap: break-word; word-break:break-all;vertical-align: middle;}
 .tableTime th, .tableTime td{padding:9px 15px;}
 .table th, .table td{padding:12px 16px;}
 .table input{width:100%;}
