@@ -35,11 +35,11 @@
             flex-wrap: wrap;
         }
         .basic-grey label {
-          width: 45%;
+            width: 45%;
         }
         .basic-grey label:nth-child(2n+1) {
-          clear: left;
-          margin-right: 10px;
+            clear: left;
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -126,40 +126,47 @@
 
         // Show the filter form when the filter button is clicked
         filterBtn.addEventListener('click', () => {
-          filterForm.style.display = filterForm.style.display === 'none' ? 'block' : 'none';
+            filterForm.style.display = filterForm.style.display === 'none' ? 'block' : 'none';
         });
 
         // Handle form submission
         filterForm.addEventListener('submit', (e) => {
-          e.preventDefault();
+            e.preventDefault();
 
-          // Get form values
-          const orderBy = document.getElementById('orderBy').value;
-          const limitToFirst = document.getElementById('limitToFirst').value;
-          const limitToLast = document.getElementById('limitToLast').value;
-          const equalTo = document.getElementById('equalTo').value;
-          const startAt = document.getElementById('startAt').value;
-          const endAt = document.getElementById('endAt').value;
+            // Get form values
+            const orderBy = document.getElementById('orderBy').value;
+            const limitToFirst = document.getElementById('limitToFirst').value;
+            const limitToLast = document.getElementById('limitToLast').value;
+            const equalTo = document.getElementById('equalTo').value;
+            const startAt = document.getElementById('startAt').value;
+            const endAt = document.getElementById('endAt').value;
 
-          // Create filter object
-          const filterData = {
+            // Create filter object
+            const filterData = {
             orderBy,
             limitToFirst,
             limitToLast,
             equalTo,
             startAt,
             endAt,
-          };
+            };
 
-          // Emit 'get_employees' event with filterData
-          socket.emit('get_employees', filterData);
+            // Emit 'get_employees' event with filterData
+            socket.emit('get_employees', filterData);
         });
 
+        // report result
+        socket.on('get_employee_error', (data) => {
+            // display error message
+            alert(JSON.stringify(data))
+        });
 
+        // show data on the table with employees_received event
         socket.on('employees_received', data => {
             updateEmployeeTable(data);
         });
 
+        // when connected, automatically get all
         socket.on('connect', () => {
             socket.emit('get_employees', {});
         });

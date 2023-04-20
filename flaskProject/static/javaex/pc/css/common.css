@@ -198,6 +198,7 @@ input.text{padding: 0 4px;font-size: 100%;height: 36px;line-height: 36px;padding
 .button.yellow.empty{background-color: #fff;color: #eea236;border: 1px solid #eea236;}
 .button.grey{color: #fff; background-color: #999999;}
 .button.gray{color: #222; background-color: #d8d8d8;}
+.button.darkgrey{color:#fff; background-color: #383d41; border: 1px solid #d8d8d8; margin: 4px 2px;  float: right;}
 .button.gray.empty{background-color: #fff;color: #d8d8d8;border: 1px solid #d8d8d8;}
 .button.disable{cursor: not-allowed;color: #999999;background-color: #f6f7fb;}
 .button.disable.empty{background-color: #fff;color: #999999;border: 1px solid #999999;}

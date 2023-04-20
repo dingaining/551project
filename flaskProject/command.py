@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import pymongo
 import json
 import uuid
 from flask_socketio import SocketIO, emit
+from functools import wraps
+
 
 client = pymongo.MongoClient("localhost", 27017)
 # Define database "project" and collection in the database named "emp"
@@ -10,11 +12,20 @@ db_test = client.project
 collection = db_test.emp
 
 app = Flask(__name__)
+app.secret_key = 'my_very_secret_key'
 # Create the SocketIO object after creating the Flask app
 socketio = SocketIO(app, cors_allowed_origins="*")
 @app.route('/')
-def login_page():  # All Results, index page
+def index():  # All Results, index page
     return render_template("login.html")
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/', methods=["GET","POST"])
 def login():  # All Results, index page
@@ -30,14 +41,36 @@ def login():  # All Results, index page
         emp.append(i)
         if i['EEID'] == eeid and pwd == 'password':
             verify = True
-            if eeid == 'E02387':
+            # Set admin for Vice President for Human Resources department and Corporate Unit
+            if (eeid == 'E04795') or (eeid == 'E00810') or (eeid == 'E02599'):
                 admin = True
     if verify:
+        session['logged_in'] = True
+        session['admin'] = admin
         if admin:
-            return render_template("admin_page.html", data = emp)
-        return render_template("page.html", data = emp)
+            return redirect(url_for('admin'))
+        return redirect(url_for('user'))
     else:
         return render_template("login.html", msg = 'The EEID or password you entered may be incorrect!')
+
+@app.route('/admin')
+@login_required
+def admin():
+    # Render the admin page
+    return render_template('admin_page.html')
+
+@app.route('/user')
+@login_required
+def user():
+    # Render the normal user page
+    return render_template('page.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    session.pop('admin', None)
+    return redirect(url_for('login'))
+
 
 # GET and filtering function: orderBy=”$key”/”$value”/”name”, limitToFirst/Last, equalTo, startAt/endAt for the whole data
 
@@ -45,59 +78,62 @@ def ws_get_employees(orderBy=None, limitToFirst=0, limitToLast=0, equalTo=None, 
     # check if orderBy is not defined while other query parameters are present
     if not orderBy and (limitToFirst or limitToLast or equalTo or startAt or endAt):
         return {"error": "orderBy must be defined when other query parameters are defined"}
-    if orderBy:
-        orderBy = orderBy.replace('"', '')
-        # initialize the query
-        query = []
+    try:
+        if orderBy:
+            orderBy = orderBy.replace('"', '')
+            # initialize the query
+            query = []
 
-        # set match query as equalTo or to integrate startAt and endAt in the same part
-        match_query = {}
-        if equalTo:
-            equalTo = equalTo.replace('"', '')
-            if orderBy == 'Age':
-                equalTo = int(equalTo)
-            match_query[orderBy] = equalTo
-        else:
-            if startAt:
-                startAt = startAt.replace('"', '')
+            # set match query as equalTo or to integrate startAt and endAt in the same part
+            match_query = {}
+            if equalTo:
+                equalTo = equalTo.replace('"', '')
                 if orderBy == 'Age':
-                    startAt = int(startAt)
-                match_query[orderBy] = {"$gte": startAt}
-            if endAt:
-                endAt = endAt.replace('"', '')
-                if orderBy == 'Age':
-                    endAt = int(endAt)
-                if orderBy in match_query:
-                    match_query[orderBy].update({"$lte": endAt})
-                else:
-                    match_query[orderBy] = {"$lte": endAt}
-        if match_query:
-            query.append({"$match": match_query})
+                    equalTo = int(equalTo)
+                match_query[orderBy] = equalTo
+            else:
+                if startAt:
+                    startAt = startAt.replace('"', '')
+                    if orderBy == 'Age':
+                        startAt = int(startAt)
+                    match_query[orderBy] = {"$gte": startAt}
+                if endAt:
+                    endAt = endAt.replace('"', '')
+                    if orderBy == 'Age':
+                        endAt = int(endAt)
+                    if orderBy in match_query:
+                        match_query[orderBy].update({"$lte": endAt})
+                    else:
+                        match_query[orderBy] = {"$lte": endAt}
+            if match_query:
+                query.append({"$match": match_query})
 
-        # Sorting and limiting
-        # handle the special case for orderBy
-        if orderBy == "$key":
-            pass
-        elif orderBy == "$value":
-            first_doc = collection.find_one({}, {"_id": 0})
-            first_field = next(iter(first_doc)) if first_doc else None
-            if first_field:
-                query.append({"$sort": {f"{first_field}": -1 if limitToLast > 0 else 1}})
+            # Sorting and limiting
+            # handle the special case for orderBy
+            if orderBy == "$key":
+                pass
+            elif orderBy == "$value":
+                first_doc = collection.find_one({}, {"_id": 0})
+                first_field = next(iter(first_doc)) if first_doc else None
+                if first_field:
+                    query.append({"$sort": {f"{first_field}": -1 if limitToLast > 0 else 1}})
+            else:
+                query.append({"$sort": {f"{orderBy}": -1 if limitToLast > 0 else 1}})
+            if limitToFirst > 0:
+                query.append({"$limit": limitToFirst})
+            elif limitToLast > 0:
+                query.append({"$limit": limitToLast})
+            query.append({"$project": {"_id": 0}})
+
+            emp = [i for i in collection.aggregate(query)]
         else:
-            query.append({"$sort": {f"{orderBy}": -1 if limitToLast > 0 else 1}})
-        if limitToFirst > 0:
-            query.append({"$limit": limitToFirst})
-        elif limitToLast > 0:
-            query.append({"$limit": limitToLast})
-        query.append({"$project": {"_id": 0}})
-
-        emp = [i for i in collection.aggregate(query)]
-    else:
-        emp = []
-        a = collection.find({}, {"_id": 0})
-        for i in a:
-            emp.append(i)
-    return emp
+            emp = []
+            a = collection.find({}, {"_id": 0})
+            for i in a:
+                emp.append(i)
+        return emp
+    except Exception as e:
+        return {"error": str(e)}
 
 # command line # eg. curl -X GET 'http://localhost:5000/employees.json' to get the whole data
 # or using filtering function eg. curl -X GET 'http://localhost:5000/employees.json?orderBy="Full%20Name"&limitToFirst=5' ; curl -X GET 'http://localhost:5000/employees.json?orderBy="Bonus%20%25"&equalTo="25%"'
@@ -119,6 +155,8 @@ def get_employees():
 # WebSocket event handler for getting employees
 @socketio.on('get_employees')
 def handle_get_employees(data):
+    # do not broadcast by default
+    forceBroadcast = True if data.get('forceBroadcast') == 1 else False
     orderBy = data.get('orderBy')
     limitToFirst = int(data.get('limitToFirst', 0))
     limitToLast = int(data.get('limitToLast', 0))
@@ -127,9 +165,14 @@ def handle_get_employees(data):
     endAt = data.get('endAt')
 
     result = ws_get_employees(orderBy, limitToFirst, limitToLast, equalTo, startAt, endAt)
-    if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
-        emit('employees_received', result[0], broadcast=True)
-    emit('employees_received', result, broadcast=True)
+    # only broadcast the result that change the data
+    if 'error' in result:
+        emit('get_employee_error', result, broadcast=False)
+    elif orderBy == '' or orderBy == None:
+        emit('employees_received', result, broadcast=forceBroadcast)
+    else:
+        # not broadcast filter result
+        emit('employees_received', result, broadcast=False)
 
 # PUT for adding new employee or overwriting employee's information by its EEID
 def ws_put_employee(eeid, dicts):
@@ -176,8 +219,11 @@ def handle_put_employee(data):
     # employee_data needs to be a dictionary
     dicts = data
     result = ws_put_employee(eeid, dicts)
-    emit('employees_put', result, broadcast=True)
-    emit('get_employees', {}, broadcast=True)
+    if 'error' in result:
+        emit('put_employee_error', result, broadcast=False)
+    else:
+        emit('put_employee_success', result, broadcast=False)
+
 
 # POST: Create a new employee without specifying EEID (server generates EEID automatically).
 def ws_post_employee(dicts):
@@ -211,8 +257,10 @@ def post_employee():
 @socketio.on('post_employee')
 def handle_post_employee(data):
     result = ws_post_employee(data)
-    emit('employees_posted', result, broadcast=True)
-    emit('get_employees', {}, broadcast=True)
+    if 'error' in result:
+        emit('post_employee_error', result, broadcast=False)
+    else:
+        emit('post_employee_success', result, broadcast=False)
 
 # PATCH: Update specific fields of an existing employee by their EEID.
 def ws_patch_employee(eeid, data):
@@ -224,7 +272,7 @@ def ws_patch_employee(eeid, data):
         if result.matched_count > 0:
             return {"message": f"Employee {eeid} updated successfully."}
         else:
-            return {"error": f"Employee {eeid} not found but upserted successfully"}, 404
+            return {"message": f"Employee {eeid} not found but upserted successfully"}, 404
     except Exception as e:
         return {"error": str(e)}, 400
 
@@ -238,20 +286,23 @@ def patch_employee(eeid):
             dicts = json.loads(key)
         data = dicts
     result = ws_patch_employee(eeid, data)
-    if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
-        return jsonify(result[0]), result[1]
+    if 'error' in result:
+        return jsonify(result), 400
+    elif 'not found' in result:
+        return jsonify(result), 404
     return jsonify(result)
 
 # WebSocket event handler for patching employee
 @socketio.on('patch_employee')
 def handle_patch_employee(data):
     eeid = data.get('eeid')
-    # employee_data needs to be a dictionary
     data = data.get('employee_data')
 
     result = ws_patch_employee(eeid, data)
-    emit('employee_updated', result, broadcast=True)
-    emit('get_employees', {}, broadcast=True)
+    if 'error' in result:
+        emit('patch_employee_error', result, broadcast=False)
+    else:
+        emit('patch_employee_success', result, broadcast=False)
 
 # DELETE: Remove an existing employee by their EEID.
 def ws_delete_employee(eeid):
@@ -260,7 +311,6 @@ def ws_delete_employee(eeid):
         print(type(eeid))
         # Check if employee with eeid exists
         result = collection.delete_one({'EEID': eeid})
-
         count = result.deleted_count
         if count > 0:
             return {"message": f"Employee {eeid} deleted successfully, {count} record of employee deleted"}
@@ -273,25 +323,33 @@ def ws_delete_employee(eeid):
 @app.route('/employees/<string:eeid>.json', methods=['DELETE'])
 def delete_employee(eeid):
     result = ws_delete_employee(eeid)
-    if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
-        return jsonify(result[0]), result[1]
+    if 'error' in result:
+        if 'not found' in result:
+            return jsonify(result), 404
+        else:
+            return jsonify(result), 400
     return jsonify(result)
 
 # WebSocket event handler for deleting employee
 @socketio.on('delete_employee')
 def handle_delete_employee(eeid):
     result = ws_delete_employee(eeid)
-    emit('employee_deleted', result, broadcast=True)
-    emit('get_employees', {}, broadcast=True)
+    if 'error' in result:
+        emit('delete_employee_error', result, broadcast=False)
+    else:
+        emit('delete_employee_success', result, broadcast=False)
 
 # WebSocket basic event handlers
+# when connected, automatically get all
 @socketio.on('connect')
 def handle_connect():
-    print('Client connected')
+    client_id = request.sid
+    print(f'Client {client_id} connected')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print('Client disconnected')
+    client_id = request.sid
+    print(f'Client {client_id} disconnected')
 
 if __name__ == "__main__":
     socketio.run(app, debug=True, allow_unsafe_werkzeug=True)

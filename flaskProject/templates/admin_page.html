@@ -48,6 +48,7 @@
 </head>
 <body>
     <div class="title">Employee Management System</div>
+    <button id="logout-button" class="button darkgrey">Logout</button>
     <div class="list-content">
 	<div class="block">
 		<div class="main">
@@ -305,7 +306,7 @@
                 socket.emit('patch_employee', { eeid: EEID, employee_data: employeeData });
             } else {
                 // report error
-
+                alert('EEID is needed')
             }
         });
 
@@ -324,17 +325,84 @@
                 socket.emit('delete_employee', EEID);
             } else {
                 // report error
-
+                alert('EEID is needed')
             }
         });
 
+        // report result
+        socket.on('get_employee_error', (data) => {
+            // display error message
+            alert(JSON.stringify(data))
+        });
+
+        socket.on('put_employee_success', (data) => {
+            // display success message
+            alert(JSON.stringify(data));
+            // update the whole data again to every client
+            socket.emit('get_employees', {'forceBroadcast' : 1})
+        });
+
+        socket.on('put_employee_error', (data) => {
+            alert('Error adding or overwriting employee');
+        });
+
+        socket.on('post_employee_success', (data) => {
+            alert(JSON.stringify(data));
+            socket.emit('get_employees', {'forceBroadcast' : 1})
+        });
+
+        socket.on('post_employee_error', (data) => {
+            alert('Error adding new employee');
+        });
+
+        socket.on('patch_employee_success', (data) => {
+            alert(JSON.stringify(data));
+            socket.emit('get_employees', {'forceBroadcast' : 1})
+        });
+
+        socket.on('patch_employee_error', (data) => {
+            alert('Error updating employee');
+        });
+
+        socket.on('delete_employee_success', (data) => {
+            alert(JSON.stringify(data));
+            socket.emit('get_employees', {'forceBroadcast' : 1})
+        });
+
+        socket.on('delete_employee_error', (data) => {
+            const dataString = JSON.stringify(data)
+            alert('Error deleting employee: ${dataString}');
+        });
+
+        // show data on the table with employees_received event
         socket.on('employees_received', data => {
             updateEmployeeTable(data);
         });
 
+        // when connected, automatically get all
         socket.on('connect', () => {
             socket.emit('get_employees', {});
         });
+
+        //logout button
+        document.getElementById("logout-button").addEventListener("click", function() {
+            fetch("/logout", {
+                method: "GET",
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    // Redirect the user to the login page after logging out
+                    window.location.href = "/";
+                } else {
+                    // Handle any error messages or actions you want to take
+                    console.error("Error logging out:", response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
     </script>
 </body>
 </html>

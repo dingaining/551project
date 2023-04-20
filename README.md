@@ -23,6 +23,9 @@ OR:
     Filter: with Order By, Limit To First, Limit To Last, Equal To, Start At, End At. Order By is required if other fields have values. Same as usage method of curl command but no need to quote.
 (4-2) For user, it has only Filter buttons. Same as Filter stated above.
 
+About real-time syncing:
+The localhost:5000 allow multiple users after logging in. Every user can do their own things without interrupt. The only situation is that if someone successfully changed(put/post/patch/delete) the data and confirm the change, the whole data will update to everyone at the same time. 
+
 file current in use: 
 load_data.py
 command.py
@@ -33,9 +36,9 @@ command.py
 /static/javaex/pc/css/skin/tina.css
 
 ###TODO:(Rank by importance?)
-(1) Multiple clients at the same time connect to the server do different things but sync with each other.
-(2) Error message or successful message to report on the frontend webpage.
-(3) Thoroughly test to ensure everything is working correctly. Especially ensuring the real-time syncing.
-(4) Log out function
-(5) More reasonable way to set the users' permission. eg. select Job Title: Vice President, Department: Human Resources to be the administrator? use another table to store the permission and password information?
-(6) ...
+(1) (DONE)Multiple clients at the same time connect to the server do different things but sync with each other.
+(2) (DONE)Error message or successful message to report on the frontend webpage.
+(3) Thoroughly test to ensure everything is working correctly.
+(4) (DONE)Log out function
+(5) (DONE with 3 admin of Vice President for Human Resources department and Corporate Unit)  More reasonable way to set the users' permission. eg. select Job Title: Vice President, Department: Human Resources to be the administrator?
+(6) (DONE) The normal user is not in url: http://localhost:5000/user. And the admin is now in url: http://localhost:5000/admin. But it cannot directly access. It will redirect to the login page if not log in. 
