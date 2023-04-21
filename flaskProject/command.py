@@ -187,11 +187,12 @@ def ws_put_employee(eeid, dicts):
             # reference: Update Operation part on https://www.mongodb.com/docs/v4.4/crud/
             # As it can replace the whole document, it's corresponded to the overwrite function when data exists.
             collection.replace_one({'EEID': eeid}, data)
-            return {"message": f"Employee {eeid} updated successfully."}
+            # the first[0] is user friendly message, and the second[1] is same format as firebase for curl command
+            return {"message": f"Employee {eeid} updated successfully."}, data
         else:
             # insert new employee with eeid
             collection.insert_one(data)
-            return {"message": f"Employee {eeid} added successfully."}
+            return {"message": f"Employee {eeid} added successfully."}, data
     except Exception as e:
         return {"error": str(e)}
 
@@ -209,8 +210,8 @@ def put_employee(eeid):
             dicts = json.loads(key)
     result = ws_put_employee(eeid, dicts)
     if 'error' in result:
-        return jsonify(result), 400
-    return jsonify(result)
+        return jsonify(result[0]), 400
+    return jsonify(result[1])
 
 # WebSocket event handler for adding or overwriting employees
 @socketio.on('put_employee')
@@ -220,9 +221,9 @@ def handle_put_employee(data):
     dicts = data
     result = ws_put_employee(eeid, dicts)
     if 'error' in result:
-        emit('put_employee_error', result, broadcast=False)
+        emit('put_employee_error', result[0], broadcast=False)
     else:
-        emit('put_employee_success', result, broadcast=False)
+        emit('put_employee_success', result[0], broadcast=False)
 
 
 # POST: Create a new employee without specifying EEID (server generates EEID automatically).
@@ -233,9 +234,10 @@ def ws_post_employee(dicts):
         data = {}
         data['EEID'] = eeid
         data.update(dicts)
+        # in case if null value cover the real value
         data['EEID'] = eeid
         collection.insert_one(data)
-        return {"message": f"New employee {eeid} added successfully."}
+        return {"message": f"New employee {eeid} added successfully."}, {"name": eeid}
     except Exception as e:
         return {"error": str(e)}
 
@@ -250,17 +252,17 @@ def post_employee():
 
     result = ws_post_employee(dicts)
     if 'error' in result:
-        return jsonify(result), 400
-    return jsonify(result)
+        return jsonify(result[0]), 400
+    return jsonify(result[1])
 
 # WebSocket event handler for posting new employees
 @socketio.on('post_employee')
 def handle_post_employee(data):
     result = ws_post_employee(data)
     if 'error' in result:
-        emit('post_employee_error', result, broadcast=False)
+        emit('post_employee_error', result[0], broadcast=False)
     else:
-        emit('post_employee_success', result, broadcast=False)
+        emit('post_employee_success', result[0], broadcast=False)
 
 # PATCH: Update specific fields of an existing employee by their EEID.
 def ws_patch_employee(eeid, data):
@@ -270,11 +272,11 @@ def ws_patch_employee(eeid, data):
         result = collection.update_one({'EEID': eeid}, {'$set': data}, upsert=True)
 
         if result.matched_count > 0:
-            return {"message": f"Employee {eeid} updated successfully."}
+            return {"message": f"Employee {eeid} updated successfully."}, data
         else:
-            return {"message": f"Employee {eeid} not found but upserted successfully"}, 404
+            return {"message": f"Employee {eeid} not found but upserted successfully"}, data
     except Exception as e:
-        return {"error": str(e)}, 400
+        return {"error": str(e)}
 
 # command line eg. curl -X PATCH 'http://localhost:5000/employees/E100000.json' -d '{"Business Unit": "Overall Leadership", "Bonus %": "20%"}'
 @app.route('/employees/<string:eeid>.json', methods=['PATCH'])
@@ -287,10 +289,10 @@ def patch_employee(eeid):
         data = dicts
     result = ws_patch_employee(eeid, data)
     if 'error' in result:
-        return jsonify(result), 400
+        return jsonify(result[0]), 400
     elif 'not found' in result:
-        return jsonify(result), 404
-    return jsonify(result)
+        return jsonify(result[1]), 404
+    return jsonify(result[1])
 
 # WebSocket event handler for patching employee
 @socketio.on('patch_employee')
@@ -300,24 +302,22 @@ def handle_patch_employee(data):
 
     result = ws_patch_employee(eeid, data)
     if 'error' in result:
-        emit('patch_employee_error', result, broadcast=False)
+        emit('patch_employee_error', result[0], broadcast=False)
     else:
-        emit('patch_employee_success', result, broadcast=False)
+        emit('patch_employee_success', result[0], broadcast=False)
 
 # DELETE: Remove an existing employee by their EEID.
 def ws_delete_employee(eeid):
     try:
-        print(eeid)
-        print(type(eeid))
         # Check if employee with eeid exists
         result = collection.delete_one({'EEID': eeid})
         count = result.deleted_count
         if count > 0:
-            return {"message": f"Employee {eeid} deleted successfully, {count} record of employee deleted"}
+            return {"message": f"Employee {eeid} deleted successfully, {count} record of employee deleted"}, None
         else:
-            return {"error": f"Employee {eeid} not found."}, 404
+            return {"error": f"Employee {eeid} not found."}, None
     except Exception as e:
-        return {"error": str(e)}, 400
+        return {"error": str(e)}
 
 # eg. curl -X DELETE 'http://localhost:5000/employees/E100000.json'
 @app.route('/employees/<string:eeid>.json', methods=['DELETE'])
@@ -325,19 +325,19 @@ def delete_employee(eeid):
     result = ws_delete_employee(eeid)
     if 'error' in result:
         if 'not found' in result:
-            return jsonify(result), 404
+            return jsonify(result[1]), 404
         else:
             return jsonify(result), 400
-    return jsonify(result)
+    return jsonify(result[1])
 
 # WebSocket event handler for deleting employee
 @socketio.on('delete_employee')
 def handle_delete_employee(eeid):
     result = ws_delete_employee(eeid)
     if 'error' in result:
-        emit('delete_employee_error', result, broadcast=False)
+        emit('delete_employee_error', result[0], broadcast=False)
     else:
-        emit('delete_employee_success', result, broadcast=False)
+        emit('delete_employee_success', result[0], broadcast=False)
 
 # WebSocket basic event handlers
 # when connected, automatically get all
