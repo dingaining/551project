@@ -45,6 +45,7 @@
 </head>
 <body>
     <div class="title">Employee Management System</div>
+    <button id="logout-button" class="button darkgrey">Logout</button>
     <div class="list-content">
 	<div class="block">
 		<div class="main">
@@ -54,11 +55,11 @@
                     <label for="orderBy">Order By: </label>
                     <input type="text" id="orderBy" name="orderBy">
                     <label for="limitToFirst">Limit To First: </label>
-                    <input type="number" id="limitToFirst" name="limitToFirst" value="0">
+                    <input type="number" id="limitToFirst" name="limitToFirst" placeholder="0 means None value" min="0" value="0"><br>
                     <label for="limitToLast">Limit To Last: </label>
-                    <input type="number" id="limitToLast" name="limitToLast" value="0">
+                    <input type="number" id="limitToLast" name="limitToLast" placeholder="0 means None value" min="0" value="0">
                     <label for="equalTo">Equal To: </label>
-                    <input type="text" id="equalTo" name="equalTo">
+                    <input type="text" id="equalTo" name="equalTo"><br>
                     <label for="startAt">Start At: </label>
                     <input type="text" id="startAt" name="startAt">
                     <label for="endAt">End At: </label>
@@ -169,6 +170,25 @@
         // when connected, automatically get all
         socket.on('connect', () => {
             socket.emit('get_employees', {});
+        });
+
+        // logout button
+        document.getElementById("logout-button").addEventListener("click", function() {
+            fetch("/logout", {
+                method: "GET",
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    // Redirect the user to the login page after logging out
+                    window.location.href = "/";
+                } else {
+                    // Handle any error messages or actions you want to take
+                    console.error("Error logging out:", response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
         });
     </script>
 </body>

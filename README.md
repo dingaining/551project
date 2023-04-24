@@ -1,13 +1,14 @@
 ##Instruction:
 
-packages needed: flask; pymongo; flask_socketio
-environment needed: have downloaded MongoDB Community and make an connection on localhost:27017
+packages needed: flask; pymongo; flask-socketio, simple-websocket
+environment needed: have downloaded MongoDB Community and make a connection on localhost:27017
 
 (1) run load_data.py to initialize the database, which include loading the dataset from sampleData/Employee.json and indexing all the fields
 (2) run command.py, which is the only backend of this project
 (3-1) use normal curl command to CREATE, UPDATE, READ and DELETE. for example:
     curl -X GET 'http://localhost:5000/employees.json'
     curl -X GET 'http://localhost:5000/employees.json?orderBy="Full%20Name"&limitToFirst=5' 
+    curl -X GET 'http://localhost:5000/employees.json?orderBy="Full%20Name"&limitToLast=5' 
     curl -X GET 'http://localhost:5000/employees.json?orderBy="Bonus%20%25"&equalTo="25%"'
     curl -X GET 'http://localhost:5000/employees.json?orderBy="Age"&startAt=25&endAt=26'
     curl -X PUT 'http://localhost:5000/employees/E100000.json' -d '{"Full Name": "George Bush","Job Title": "President","Department": "Politics","Business Unit": "Overall Development","Gender": "Male","Age": 94,"Hire Date": "1/20/1989","Annual Salary": "$400,000","Bonus %": "15%","Country": "United States","Exit Date": "01/20/1993"}'
@@ -41,4 +42,4 @@ command.py
 (3) Thoroughly test to ensure everything is working correctly.
 (4) (DONE)Log out function
 (5) (DONE with 3 admin of Vice President for Human Resources department and Corporate Unit)  More reasonable way to set the users' permission. eg. select Job Title: Vice President, Department: Human Resources to be the administrator?
-(6) (DONE) The normal user is not in url: http://localhost:5000/user. And the admin is now in url: http://localhost:5000/admin. But it cannot directly access. It will redirect to the login page if not log in. 
+(6) (DONE) The normal user is now in url: http://localhost:5000/user. And the admin is now in url: http://localhost:5000/admin. But it cannot directly access. It will redirect to the login page if not log in. 
