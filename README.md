@@ -1,11 +1,14 @@
-##Instruction:
+# Instruction:
 
 packages needed: flask; pymongo; flask-socketio, simple-websocket
 environment needed: have downloaded MongoDB Community and make a connection on localhost:27017
 
 (1) run load_data.py to initialize the database, which include loading the dataset from sampleData/Employee.json and indexing all the fields
+
 (2) run command.py, which is the only backend of this project
+
 (3-1) use normal curl command to CREATE, UPDATE, READ and DELETE. for example:
+
     curl -X GET 'http://localhost:5000/employees.json'
     curl -X GET 'http://localhost:5000/employees.json?orderBy="Full%20Name"&limitToFirst=5' 
     curl -X GET 'http://localhost:5000/employees.json?orderBy="Full%20Name"&limitToLast=5' 
@@ -15,13 +18,17 @@ environment needed: have downloaded MongoDB Community and make a connection on l
     curl -X POST 'http://localhost:5000/employees.json' -d '{"Full Name": "John Doe","Job Title": "Developer","Department": "IT","Business Unit": "Software","Gender": "Male","Age": 28,"Hire Date": "10/01/2017","Annual Salary": "$80,000","Bonus %": "5%","Country": "United States","Exit Date": ""}'
     curl -X PATCH 'http://localhost:5000/employees/E100000.json' -d '{"Business Unit": "Overall Leadership", "Bonus %": "20%"}'
     curl -X DELETE 'http://localhost:5000/employees/E100000.json'
+
 OR:
+
 (3-2) open localhost:5000 with browser, it will show login.html. login with the eeid of employee. Currently the EEID of E02387 with password of "password" is the administrator with permission to CREATE, UPDATE, READ and DELETE. Other EEIDs(eg. E04105) with password of "password" are the users with permission to READ. After log in, it will jump to corresponding page: admin_page.html and page.html
+
 (4-1) For administrator, it has 4 buttons:
     Delete Employee: delete employee by EEID
     Add or Overwrite Employee: if you input value for EEID, it will call the PUT to add or overwrite the employee's information for the EEID. if no value input for EEID, it will call the POST to randomly generate new EEID and add the employee for the new EEID. Other fields are optional.
     Update Employee: EEID is required. it will call the PATCH to update certain fields for this EEID.
     Filter: with Order By, Limit To First, Limit To Last, Equal To, Start At, End At. Order By is required if other fields have values. Same as usage method of curl command but no need to quote.
+
 (4-2) For user, it has only Filter buttons. Same as Filter stated above.
 
 About real-time syncing:
