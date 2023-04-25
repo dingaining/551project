@@ -113,8 +113,10 @@ def ws_get_employees(orderBy=None, limitToFirst=0, limitToLast=0, equalTo=None, 
             # Sorting and limiting
             # handle the special case for orderBy
             if orderBy == "$key":
+                # if orderBy==$key it will return all
                 pass
             elif orderBy == "$value":
+                # if orderBy==$value it will orderBy the first field
                 first_doc = collection.find_one({}, {"_id": 0})
                 first_field = next(iter(first_doc)) if first_doc else None
                 if first_field:
@@ -126,7 +128,7 @@ def ws_get_employees(orderBy=None, limitToFirst=0, limitToLast=0, equalTo=None, 
             elif limitToLast > 0:
                 query.append({"$limit": limitToLast})
             query.append({"$project": {"_id": 0}})
-
+            # construct a MongoDB aggregation pipeline to query the collection
             emp = [i for i in collection.aggregate(query)]
         else:
             emp = []
@@ -194,6 +196,7 @@ def ws_put_employee(eeid, dicts):
         else:
             # insert new employee with eeid
             collection.insert_one(data)
+            del data['_id']
             return {"message": f"Employee {eeid} added successfully."}, data
     except Exception as e:
         return {"error": str(e)}
