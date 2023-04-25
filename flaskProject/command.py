@@ -19,6 +19,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 def index():  # All Results, index page
     return render_template("login.html")
 
+# Use session to control the state of login or logout
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -27,6 +28,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# User authentication, role-based access control
 @app.route('/', methods=["GET","POST"])
 def login():  # All Results, index page
     if request.method == 'GET':
