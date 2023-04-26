@@ -8,7 +8,7 @@ Environment needed: have downloaded MongoDB Community and make a connection on l
 
 (2) run command.py, which is the only backend of this project
 
-(3-1) use normal curl command to CREATE, UPDATE, READ and DELETE (Restful API) for example:
+(3-1) for developer: use normal curl command to CREATE, UPDATE, READ and DELETE (Restful API) for example:
 
     curl -X GET 'http://localhost:5000/employees.json'
     curl -X GET 'http://localhost:5000/employees.json?orderBy="Full%20Name"&limitToFirst=5' 
@@ -22,7 +22,7 @@ Environment needed: have downloaded MongoDB Community and make a connection on l
 
 OR:
 
-(3-2) open localhost:5000 with browser, it will show login.html. login with the eeid of employee. 
+(3-2) for user: open localhost:5000 with browser, it will show login.html. login with the eeid of employee. 
 The employee who is Vice President for Human Resources department and Corporate Unit(eg. EEID: E04795) with password of "password" is the administrator with permission to CREATE, UPDATE, READ and DELETE. Other EEIDs(eg. E04105) with password of "password" are the users with permission to READ. After log in, it will jump to corresponding page: admin_page.html(http://localhost:5000/admin) or page.html(http://localhost:5000/user). Without login, user cannot directly access these urls and will jump to login page if trying to directly access.
 
 (4-1) For administrator, it has 4 buttons:
